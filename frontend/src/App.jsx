@@ -1,7 +1,7 @@
 import { useState } from "react";
 import MovieCard from "./components/MovieCard";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE ?? "";
 
 export default function App() {
   const [userId, setUserId] = useState(1);

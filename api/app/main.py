@@ -3,6 +3,8 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from .config import settings
 from .db.init_db import init_db, seed_from_movielens
@@ -35,9 +37,18 @@ app.add_middleware(
 
 app.include_router(recommendation_router)
 
+frontend_dist = Path(__file__).resolve().parents[2] / "frontend_dist"
+frontend_index = frontend_dist / "index.html"
+
+if frontend_dist.exists():
+    app.mount("/assets", StaticFiles(directory=frontend_dist / "assets"), name="assets")
+
 
 @app.get("/")
 def root():
+    if frontend_index.exists():
+        return FileResponse(frontend_index)
+
     return {
         "message": "Movie Recommender API is running",
         "docs": "/docs",
