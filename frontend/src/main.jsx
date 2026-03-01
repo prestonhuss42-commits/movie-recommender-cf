@@ -8,3 +8,8 @@ createRoot(document.getElementById("root")).render(
     <App />
   </React.StrictMode>
 );
+
+const bootMessage = document.getElementById("boot-message");
+if (bootMessage) {
+  bootMessage.style.display = "none";
+}
