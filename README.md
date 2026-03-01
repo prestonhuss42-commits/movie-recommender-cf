@@ -107,9 +107,9 @@ python run.py
 ## 5) Frontend (React, Optional)
 
 ### Features
-- Input a user ID
-- Click button to fetch recommendations
+- Input a user ID and fetch top-5 recommendations
 - Display movie cards with title, movie ID, predicted score
+- Predict a specific `(user_id, movie_id)` rating from the UI
 
 ### Run frontend
 

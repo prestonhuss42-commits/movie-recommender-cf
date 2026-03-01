@@ -16,6 +16,15 @@
       </div>
       <p id="fallback-error" style="display: none;"></p>
       <div id="fallback-results" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;"></div>
+
+      <h2>Predict Rating</h2>
+      <div style="display: flex; gap: 0.75rem; margin: 1rem 0;">
+        <input id="fallback-predict-user-id" type="number" min="1" value="1" style="padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid;" />
+        <input id="fallback-predict-movie-id" type="number" min="1" value="50" style="padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid;" />
+        <button id="fallback-predict" style="padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid; cursor: pointer;">Predict</button>
+      </div>
+      <p id="fallback-predict-error" style="display: none;"></p>
+      <p id="fallback-predict-result"></p>
     </div>
     <div id="root">
       <main style="max-width: 920px; margin: 2rem auto; padding: 1rem; font-family: Arial, sans-serif;">
@@ -29,8 +38,23 @@
         const fetchButton = document.getElementById("fallback-fetch");
         const errorNode = document.getElementById("fallback-error");
         const resultsNode = document.getElementById("fallback-results");
+        const predictUserIdInput = document.getElementById("fallback-predict-user-id");
+        const predictMovieIdInput = document.getElementById("fallback-predict-movie-id");
+        const predictButton = document.getElementById("fallback-predict");
+        const predictErrorNode = document.getElementById("fallback-predict-error");
+        const predictResultNode = document.getElementById("fallback-predict-result");
 
-        if (!userIdInput || !fetchButton || !errorNode || !resultsNode) {
+        if (
+          !userIdInput ||
+          !fetchButton ||
+          !errorNode ||
+          !resultsNode ||
+          !predictUserIdInput ||
+          !predictMovieIdInput ||
+          !predictButton ||
+          !predictErrorNode ||
+          !predictResultNode
+        ) {
           return;
         }
 
@@ -73,7 +97,45 @@
           }
         }
 
+        async function loadPrediction() {
+          const userId = Number(predictUserIdInput.value || 1);
+          const movieId = Number(predictMovieIdInput.value || 1);
+          predictButton.disabled = true;
+          predictButton.textContent = "Loading...";
+          predictErrorNode.style.display = "none";
+          predictErrorNode.textContent = "";
+          predictResultNode.textContent = "";
+
+          try {
+            const response = await fetch("/predict", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                user_id: userId,
+                movie_id: movieId,
+              }),
+            });
+
+            const payload = await response.json();
+            if (!response.ok) {
+              throw new Error(payload.detail || "Failed to predict rating");
+            }
+
+            predictResultNode.textContent =
+              "Predicted Rating: " + Number(payload.predicted_rating).toFixed(2);
+          } catch (error) {
+            predictErrorNode.textContent = error.message || "Request failed";
+            predictErrorNode.style.display = "block";
+          } finally {
+            predictButton.disabled = false;
+            predictButton.textContent = "Predict";
+          }
+        }
+
         fetchButton.addEventListener("click", loadRecommendations);
+        predictButton.addEventListener("click", loadPrediction);
       })();
     </script>
     <script type="module" src="/src/main.jsx"></script>
