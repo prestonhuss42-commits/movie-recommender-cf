@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MovieCard from "./components/MovieCard";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "";
@@ -8,6 +8,13 @@ export default function App() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const bootMessage = document.getElementById("boot-message");
+    if (bootMessage) {
+      bootMessage.style.display = "none";
+    }
+  }, []);
 
   const fetchRecommendations = async () => {
     setLoading(true);
