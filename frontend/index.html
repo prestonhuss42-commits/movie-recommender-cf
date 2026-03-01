@@ -9,7 +9,13 @@
     <div id="boot-message" style="max-width: 920px; margin: 2rem auto; padding: 1rem; font-family: Arial, sans-serif;">
       <h1>Movie Recommendation System</h1>
       <p>Starting app...</p>
-      <p>If this stays here, refresh once with Ctrl+F5.</p>
+      <p>If this stays here, the fallback below is fully usable.</p>
+      <div style="display: flex; gap: 0.75rem; margin: 1rem 0;">
+        <input id="fallback-user-id" type="number" min="1" value="1" style="padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid;" />
+        <button id="fallback-fetch" style="padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid; cursor: pointer;">Get Recommendations</button>
+      </div>
+      <p id="fallback-error" style="display: none;"></p>
+      <div id="fallback-results" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;"></div>
     </div>
     <div id="root">
       <main style="max-width: 920px; margin: 2rem auto; padding: 1rem; font-family: Arial, sans-serif;">
@@ -17,6 +23,59 @@
         <p>Loading application...</p>
       </main>
     </div>
+    <script>
+      (function () {
+        const userIdInput = document.getElementById("fallback-user-id");
+        const fetchButton = document.getElementById("fallback-fetch");
+        const errorNode = document.getElementById("fallback-error");
+        const resultsNode = document.getElementById("fallback-results");
+
+        if (!userIdInput || !fetchButton || !errorNode || !resultsNode) {
+          return;
+        }
+
+        function renderResults(items) {
+          resultsNode.innerHTML = "";
+          for (const item of items) {
+            const card = document.createElement("div");
+            card.style.padding = "1rem";
+            card.style.border = "1px solid";
+            card.style.borderRadius = "8px";
+            card.innerHTML =
+              "<h3>" + item.title + "</h3>" +
+              "<p>Movie ID: " + item.movie_id + "</p>" +
+              "<p>Predicted Score: " + Number(item.score).toFixed(2) + "</p>";
+            resultsNode.appendChild(card);
+          }
+        }
+
+        async function loadRecommendations() {
+          const userId = Number(userIdInput.value || 1);
+          fetchButton.disabled = true;
+          fetchButton.textContent = "Loading...";
+          errorNode.style.display = "none";
+          errorNode.textContent = "";
+
+          try {
+            const response = await fetch("/recommend/" + userId);
+            const payload = await response.json();
+            if (!response.ok) {
+              throw new Error(payload.detail || "Failed to fetch recommendations");
+            }
+            renderResults(payload.recommendations || []);
+          } catch (error) {
+            resultsNode.innerHTML = "";
+            errorNode.textContent = error.message || "Request failed";
+            errorNode.style.display = "block";
+          } finally {
+            fetchButton.disabled = false;
+            fetchButton.textContent = "Get Recommendations";
+          }
+        }
+
+        fetchButton.addEventListener("click", loadRecommendations);
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
