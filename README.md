@@ -1,25 +1,82 @@
-# Production-Ready Movie Recommendation System
+# Movie Recommendation System (Collaborative Filtering)
 
-This project implements a collaborative filtering recommendation system trained on MovieLens, served via FastAPI, persisted with SQLite, and optionally consumed by a React frontend.
+Production-style full-stack recommendation system built with Python, FastAPI, SQLite, and React.
 
-## 1) Project Folder Structure
+## Live Demo
+- App: https://daring-benevolence-production-753f.up.railway.app/
+- API docs: https://daring-benevolence-production-753f.up.railway.app/docs
 
+## Portfolio Highlights
+- End-to-end ML pipeline on real MovieLens data.
+- Collaborative filtering via matrix factorization (`TruncatedSVD`).
+- FastAPI backend with typed schemas and robust error handling.
+- SQLite persistence for users, movies, and ratings.
+- React frontend with recommendation and prediction workflows.
+- Containerized deployment on Railway.
+
+## Tech Stack
+- **ML:** Python, pandas, NumPy, scikit-learn, SciPy
+- **Backend:** FastAPI, SQLAlchemy, Pydantic
+- **Database:** SQLite
+- **Frontend:** React (Vite)
+- **DevOps:** Docker, Railway, GitHub
+
+## System Architecture
+```text
+MovieLens Ratings/Movies CSV
+        |
+        v
+ML Training Pipeline (ml/src/train.py)
+  - clean + preprocess
+  - train/test split
+  - SVD factorization
+  - RMSE evaluation
+  - save artifacts/cf_model.joblib
+        |
+        v
+FastAPI Service (api/app)
+  - /recommend/{user_id}
+  - /predict
+  - /health
+  - serves frontend bundle
+        |
+        v
+React UI + fallback HTML UI
+```
+
+## ML Workflow
+1. Download MovieLens (`ml-latest-small`).
+2. Clean/validate ratings and types.
+3. Split into train/test.
+4. Build sparse user-item matrix.
+5. Center by user mean and train low-rank SVD.
+6. Evaluate with RMSE on holdout set.
+7. Persist model bundle for online inference.
+
+Latest observed training metric on this setup: **RMSE ≈ 0.9275**.
+
+## API Endpoints
+- `GET /recommend/{user_id}` → top 5 recommended movies
+- `POST /predict` → predicted rating for `{ "user_id": int, "movie_id": int }`
+- `GET /health` → health check
+
+Example request:
+```bash
+curl -X POST https://daring-benevolence-production-753f.up.railway.app/predict \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": 1, "movie_id": 50}'
+```
+
+## Project Structure
 ```text
 movie-recommender/
 ├── api/
 │   ├── app/
 │   │   ├── db/
-│   │   │   ├── init_db.py
-│   │   │   └── session.py
 │   │   ├── models/
-│   │   │   └── entities.py
 │   │   ├── routers/
-│   │   │   └── recommendations.py
 │   │   ├── schemas/
-│   │   │   ├── prediction.py
-│   │   │   └── recommendation.py
 │   │   ├── services/
-│   │   │   └── recommender.py
 │   │   ├── config.py
 │   │   └── main.py
 │   └── run.py
@@ -28,108 +85,44 @@ movie-recommender/
 │       └── train.py
 ├── frontend/
 │   ├── src/
-│   │   ├── components/
-│   │   │   └── MovieCard.jsx
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── styles.css
-│   ├── index.html
-│   └── package.json
+│   └── index.html
 ├── data/
-│   ├── raw/
-│   └── processed/
 ├── artifacts/
-├── scripts/
-│   └── train_and_run.ps1
-├── .env.example
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
 └── README.md
 ```
 
-## 2) ML Pipeline (Collaborative Filtering)
-
-### What is implemented
-- **Algorithm:** Matrix factorization with `TruncatedSVD` (scikit-learn)
-- **Dataset:** MovieLens Latest Small (`ml-latest-small`)
-- **Data cleaning:** Null removal, rating range filtering, type normalization
-- **Preprocessing:** User/movie index mapping, sparse matrix creation, user-mean centering
-- **Split:** Train/test with `train_test_split`
-- **Evaluation:** RMSE on held-out test ratings
-- **Persistence:** `joblib` model bundle in `artifacts/cf_model.joblib`
-
-### Run training
-
+## Local Setup
+### 1) Python environment
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
+```
+
+### 2) Train model
+```bash
 python -m ml.src.train
 ```
 
-Training output includes RMSE and artifact location.
-
-## 3) Backend API (FastAPI)
-
-### Endpoints
-- `GET /recommend/{user_id}` → top 5 recommended movies
-- `POST /predict` → predicted rating for a `(user_id, movie_id)` pair
-- `GET /health` → health check
-
-### API request example
-
-```bash
-curl -X POST http://localhost:8000/predict \
-  -H "Content-Type: application/json" \
-  -d '{"user_id": 1, "movie_id": 50}'
-```
-
-### Run API
-
+### 3) Run backend
 ```bash
 cd api
 python run.py
 ```
 
-## 4) Database Layer (SQLite)
-
-### Tables
-- `users`
-- `movies`
-- `ratings`
-
-### Behavior
-- SQLAlchemy manages schema creation at startup.
-- DB is seeded from MovieLens CSV files (if empty).
-- Endpoints validate `user_id` and `movie_id` against DB records.
-
-## 5) Frontend (React, Optional)
-
-### Features
-- Input a user ID and fetch top-5 recommendations
-- Display movie cards with title, movie ID, predicted score
-- Predict a specific `(user_id, movie_id)` rating from the UI
-
-### Run frontend
-
+### 4) Run frontend (optional local dev)
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-By default it calls `http://localhost:8000`. Override with `VITE_API_BASE`.
+## Environment Variables
+Create `.env` from `.env.example`:
 
-## 6) Environment Variables
-
-Copy and edit:
-
-```bash
-copy .env.example .env
-```
-
-Variables:
 - `APP_NAME`
 - `API_HOST`
 - `API_PORT`
@@ -137,20 +130,18 @@ Variables:
 - `MODEL_PATH`
 - `TOP_K`
 
-## 7) Docker (Optional)
+## Deployment
+Containerized with Docker; deployed to Railway.
 
 ```bash
 docker compose up --build
 ```
 
-Starts:
-- API on `http://localhost:8000`
-- Frontend on `http://localhost:5173`
+## Roadmap
+- Add user authentication and personalized saved profiles.
+- Add batch retraining + model versioning.
+- Add A/B testing and online recommendation metrics.
+- Add CI tests for API contract and model artifact integrity.
 
-## 8) Production Notes
-
-- Model loading is cached in the API to avoid reloading per request.
-- Pydantic request/response schemas enforce API contracts.
-- Error handling returns HTTP 404 for unknown users/movies.
-- Artifacts are separated from source code for clean deployment boundaries.
-- The structure is modular and supports adding retraining jobs, auth, and PostgreSQL migration.
+## License
+MIT
