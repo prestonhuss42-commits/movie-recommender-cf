@@ -2,9 +2,10 @@
 
 Production-style full-stack recommendation system built with Python, FastAPI, SQLite, and React.
 
-## Live Demo
-- App: https://daring-benevolence-production-753f.up.railway.app/
-- API docs: https://daring-benevolence-production-753f.up.railway.app/docs
+## Project Type
+- Localhost-only project
+- No live hosting required
+- Download/clone and run locally
 
 ## Portfolio Highlights
 - End-to-end ML pipeline on real MovieLens data.
@@ -12,14 +13,14 @@ Production-style full-stack recommendation system built with Python, FastAPI, SQ
 - FastAPI backend with typed schemas and robust error handling.
 - SQLite persistence for users, movies, and ratings.
 - React frontend with recommendation and prediction workflows.
-- Containerized deployment on Railway.
+- Local development and optional Docker local run.
 
 ## Tech Stack
 - **ML:** Python, pandas, NumPy, scikit-learn, SciPy
 - **Backend:** FastAPI, SQLAlchemy, Pydantic
 - **Database:** SQLite
 - **Frontend:** React (Vite)
-- **DevOps:** Docker, Railway, GitHub
+- **DevOps:** Docker, GitHub
 
 ## System Architecture
 ```text
@@ -62,7 +63,7 @@ Latest observed training metric on this setup: **RMSE ≈ 0.9275**.
 
 Example request:
 ```bash
-curl -X POST https://daring-benevolence-production-753f.up.railway.app/predict \
+curl -X POST http://localhost:8000/predict \
   -H "Content-Type: application/json" \
   -d '{"user_id": 1, "movie_id": 50}'
 ```
@@ -95,30 +96,49 @@ movie-recommender/
 ```
 
 ## Local Setup
-### 1) Python environment
+
+### 1) Clone or download
+Option A (git clone):
+```bash
+git clone https://github.com/prestonhuss42-commits/movie-recommender-cf.git
+cd movie-recommender-cf
+```
+
+Option B (GitHub ZIP):
+1. Open the repository on GitHub.
+2. Click "Code".
+3. Click "Download ZIP".
+4. Extract and open the folder.
+
+### 2) Python environment
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2) Train model
+### 3) Train model
 ```bash
 python -m ml.src.train
 ```
 
-### 3) Run backend
+### 4) Run backend
 ```bash
 cd api
 python run.py
 ```
 
-### 4) Run frontend (optional local dev)
+### 5) Run frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+
+### 6) Open locally
+- Frontend UI: `http://localhost:5173`
+- Backend API: `http://localhost:8000`
+- API docs: `http://localhost:8000/docs`
 
 ## Environment Variables
 Create `.env` from `.env.example`:
@@ -130,8 +150,8 @@ Create `.env` from `.env.example`:
 - `MODEL_PATH`
 - `TOP_K`
 
-## Deployment
-Containerized with Docker; deployed to Railway.
+## Docker (Local Only)
+Run locally with Docker:
 
 ```bash
 docker compose up --build
